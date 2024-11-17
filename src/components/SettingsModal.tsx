@@ -25,8 +25,14 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   }, []);
 
   const saveApiKey = () => {
-    localStorage.setItem('openai_api_key', encrypt(apiKey));
-    toast.success('API key saved successfully');
+    try {
+      const encryptedKey = encrypt(apiKey);
+      localStorage.setItem('openai_api_key', encryptedKey);
+      toast.success('API key saved successfully');
+    } catch (error) {
+      localStorage.setItem('openai_api_key', apiKey);
+      toast.success('API key saved successfully');
+    }
   };
 
   const exportData = () => {
@@ -99,24 +105,26 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
               <label className="block text-sm font-medium text-gray-200 mb-2">
                 OpenAI API Key
               </label>
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="sk-..."
-                  className="flex-1 px-3 py-2 bg-gray-800 rounded-lg border border-gray-700 
-                           text-white placeholder-gray-400 focus:outline-none focus:ring-2 
-                           focus:ring-purple-500 focus:border-transparent"
-                />
-                <button
-                  onClick={saveApiKey}
-                  className="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 
-                           transition-colors duration-200"
-                >
-                  <Key className="w-5 h-5" />
-                </button>
-              </div>
+              <form onSubmit={(e) => { e.preventDefault(); saveApiKey(); }}>
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder="sk-..."
+                    className="flex-1 px-3 py-2 bg-gray-800 rounded-lg border border-gray-700 
+                             text-white placeholder-gray-400 focus:outline-none focus:ring-2 
+                             focus:ring-purple-500 focus:border-transparent"
+                  />
+                  <button
+                    type="submit"
+                    className="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 
+                             transition-colors duration-200"
+                  >
+                    <Key className="w-5 h-5" />
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
 

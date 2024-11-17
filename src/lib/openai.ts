@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { decrypt } from './crypto';
+import { usePromptStore } from '../store/promptStore';
 
 const getApiKey = () => {
   const savedKey = localStorage.getItem('openai_api_key');
@@ -7,8 +8,8 @@ const getApiKey = () => {
     try {
       return decrypt(savedKey);
     } catch (error) {
-      console.error('Error decrypting API key');
-      return null;
+      console.error('Error decrypting API key:', error);
+      return savedKey;
     }
   }
   return import.meta.env.VITE_OPENAI_API_KEY;
@@ -25,29 +26,7 @@ const createOpenAIClient = () => {
   });
 };
 
-class RateLimiter {
-  private lastEnhance: number = 0;
-  private enhanceCount: number = 0;
-  private readonly resetInterval: number = 60000;
-
-  canEnhance(): boolean {
-    const now = Date.now();
-    if (now - this.lastEnhance >= this.resetInterval) {
-      this.enhanceCount = 0;
-      this.lastEnhance = now;
-    }
-    return this.enhanceCount < 2;
-  }
-
-  trackEnhance(): void {
-    this.enhanceCount++;
-    this.lastEnhance = Date.now();
-  }
-}
-
-export const rateLimiter = new RateLimiter();
-
-const systemPrompt = (isNSFW: boolean) => `You are an expert creative director and art director specializing in generating highly detailed, professional prompts. 
+const systemPrompt = (isNSFW: boolean, sameLocation: boolean) => `You are an expert creative director and art director specializing in generating highly detailed, professional prompts. 
 Your task is to create 10 unique, comprehensive variations of the given prompt, each wrapped in numbered variation tags.
 
 Format each variation as:
@@ -57,6 +36,10 @@ description: [comprehensive explanation of the creative vision]
 category: [photography/digital art/3D/illustration/etc]
 tags: ["tag1", "tag2", "tag3", "tag4", "tag5"]
 </variation1>
+
+${sameLocation 
+  ? 'All 10 variations should be set in the same location or environment to explore different creative possibilities within that space.'
+  : 'Each variation should be set in a different location or environment to explore diverse settings and atmospheres.'}
 
 For each variation, include specific details about:
 1. Subject & Composition:
@@ -91,7 +74,7 @@ For each variation, include specific details about:
 
 Guidelines:
 - Make each variation twice as detailed as a standard prompt
-- ${isNSFW ? 'NSFW content is allowed but must be tasteful and artistic' : 'Keep all content family-friendly'}
+- ${isNSFW ? 'NSFW content is allowed but must be tasteful and artistic' : 'Keep all content almost family-friendly'}
 - Use professional terminology and industry-standard language
 - Each variation should be completely unique in approach
 - Include specific artistic references when relevant
@@ -101,12 +84,13 @@ Guidelines:
 Respond ONLY with the variations, no additional text.`;
 
 export const generatePromptVariations = async (basePrompt: string, isNSFW: boolean = false) => {
+  const { sameLocation } = usePromptStore.getState();
   const openai = createOpenAIClient();
   
   return openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
     messages: [
-      { role: 'system', content: systemPrompt(isNSFW) },
+      { role: 'system', content: systemPrompt(isNSFW, sameLocation) },
       { role: 'user', content: basePrompt }
     ],
     temperature: 1,

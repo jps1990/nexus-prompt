@@ -1,49 +1,53 @@
 import React, { useState } from 'react';
 import { Sparkles, Send, Loader2, AlertTriangle } from 'lucide-react';
 import { usePromptStore } from '../store/promptStore';
-import { generatePromptVariations, parseVariation, rateLimiter } from '../lib/openai';
+import { generatePromptVariations, parseVariation } from '../lib/openai';
 import toast from 'react-hot-toast';
 
 export default function PromptInput() {
   const [input, setInput] = useState('');
-  const { addPrompt, setGenerating, isGenerating, isNSFW, setNSFW } = usePromptStore();
+  const { 
+    setGenerating, 
+    isGenerating, 
+    isNSFW, 
+    setNSFW,
+    sameLocation,
+    setSameLocation,
+    addPrompts
+  } = usePromptStore();
   const [enhanceMode, setEnhanceMode] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isGenerating) return;
 
-    if (enhanceMode && !rateLimiter.canEnhance()) {
-      toast.error('Enhance is limited to 2 times per minute');
-      return;
-    }
-
     try {
       setGenerating(true);
-      if (enhanceMode) {
-        rateLimiter.trackEnhance();
-      }
-
       const stream = await generatePromptVariations(input.trim(), isNSFW);
       let buffer = '';
+      let newPrompts = [];
 
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content || '';
         buffer += content;
 
-        // Try to parse complete variations as they come in
         const variation = parseVariation(buffer);
         if (variation) {
-          addPrompt({
+          const newPrompt = {
             id: crypto.randomUUID(),
             content: variation.prompt,
             description: variation.description,
             category: variation.category,
             tags: variation.tags,
             createdAt: new Date(),
-          });
+          };
+          newPrompts.push(newPrompt);
           buffer = buffer.replace(/<variation\d+>[\s\S]*?<\/variation\d+>/, '');
         }
+      }
+
+      if (newPrompts.length > 0) {
+        addPrompts(newPrompts);
       }
 
       if (!enhanceMode) {
@@ -55,25 +59,45 @@ export default function PromptInput() {
       console.error(error);
     } finally {
       setGenerating(false);
-      setEnhanceMode(false);
     }
   };
 
   return (
     <div className="w-full max-w-3xl mx-auto space-y-4">
-      <form onSubmit={handleSubmit} className="relative flex items-center">
+      <div className="flex flex-col gap-2 mb-4">
         <button
-          type="button"
-          onClick={() => setEnhanceMode(true)}
-          disabled={isGenerating || !rateLimiter.canEnhance()}
-          className={`absolute left-4 p-1 transition-colors duration-200
-                   ${enhanceMode 
-                     ? 'text-yellow-400' 
-                     : 'text-purple-400 hover:text-purple-300'} 
-                   disabled:opacity-50`}
+          onClick={() => setEnhanceMode(!enhanceMode)}
+          className={`px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2
+                    ${enhanceMode 
+                      ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/20 scale-105' 
+                      : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500/20'}`}
         >
-          <Sparkles className="w-5 h-5" />
+          <Sparkles className={`w-5 h-5 ${enhanceMode ? 'animate-pulse' : ''}`} />
+          <span>Enhance Mode {enhanceMode ? 'ON' : 'OFF'}</span>
         </button>
+        
+        <div className="flex-1">
+          {enhanceMode ? (
+            <div className="bg-purple-500/10 p-3 rounded-lg">
+              <p className="text-sm text-purple-400">
+                <span className="font-semibold">Mode Enhance activé:</span>
+                <br />
+                • Génère des variations améliorées du prompt existant
+                <br />
+                • Pas de limite de génération
+                <br />
+                • Garde le prompt original dans le champ de saisie
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400">
+              Activer le mode Enhance pour améliorer vos prompts existants
+            </p>
+          )}
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="relative flex items-center">
         <input
           type="text"
           value={input}
@@ -99,15 +123,28 @@ export default function PromptInput() {
       </form>
 
       <div className="flex items-center justify-between px-4">
-        <label className="flex items-center space-x-2 text-sm text-gray-400">
-          <input
-            type="checkbox"
-            checked={isNSFW}
-            onChange={(e) => setNSFW(e.target.checked)}
-            className="rounded border-gray-600 text-purple-500 focus:ring-purple-500"
-          />
-          <span>Allow NSFW content</span>
-        </label>
+        <div className="flex items-center gap-4">
+          <label className="flex items-center space-x-2 text-sm text-gray-400">
+            <input
+              type="checkbox"
+              checked={isNSFW}
+              onChange={(e) => setNSFW(e.target.checked)}
+              className="rounded border-gray-600 text-purple-500 focus:ring-purple-500"
+            />
+            <span>Allow NSFW content</span>
+          </label>
+
+          <label className="flex items-center space-x-2 text-sm text-gray-400">
+            <input
+              type="checkbox"
+              checked={sameLocation}
+              onChange={(e) => setSameLocation(e.target.checked)}
+              className="rounded border-gray-600 text-purple-500 focus:ring-purple-500"
+            />
+            <span>Same location for all prompts</span>
+          </label>
+        </div>
+
         {isNSFW && (
           <div className="flex items-center space-x-1 text-yellow-500">
             <AlertTriangle className="w-4 h-4" />
