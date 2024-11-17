@@ -2,7 +2,7 @@
 
 A powerful AI-powered prompt generation tool for creators, photographers, and artists. Generate detailed, professional variations of your creative prompts with advanced artistic direction.
 
-![Live Version](https://nexusprompt.netlify.app)
+[Live Version](https://nexusprompt.netlify.app)
 
 ![NexusPrompt](https://github.com/jps1990/nexus-prompt/raw/main/public/preview.png)
 
