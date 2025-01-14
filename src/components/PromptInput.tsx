@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Sparkles, Send, Loader2, AlertTriangle } from 'lucide-react';
 import { usePromptStore } from '../store/promptStore';
 import { generatePromptVariations, parseVariation } from '../lib/openai';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
 export default function PromptInput() {
@@ -18,6 +19,7 @@ export default function PromptInput() {
     addPrompts
   } = usePromptStore();
   const [enhanceMode, setEnhanceMode] = useState(false);
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,9 +57,9 @@ export default function PromptInput() {
       if (!enhanceMode) {
         setInput('');
       }
-      toast.success(enhanceMode ? 'Prompt enhanced!' : 'Generated new variations!');
+      toast.success(t(enhanceMode ? 'prompt.enhanced' : 'prompt.variationsGenerated'));
     } catch (error) {
-      toast.error('Failed to generate variations. Please try again.');
+      toast.error(t('prompt.variationsFailed'));
       console.error(error);
     } finally {
       setGenerating(false);
@@ -75,25 +77,25 @@ export default function PromptInput() {
                       : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500/20'}`}
         >
           <Sparkles className={`w-5 h-5 ${enhanceMode ? 'animate-pulse' : ''}`} />
-          <span>Enhance Mode {enhanceMode ? 'ON' : 'OFF'}</span>
+          <span>{t(enhanceMode ? 'prompt.enhanceModeOn' : 'prompt.enhanceModeOff')}</span>
         </button>
         
         <div className="flex-1">
           {enhanceMode ? (
             <div className="bg-purple-500/10 p-3 rounded-lg">
               <p className="text-sm text-purple-400">
-                <span className="font-semibold">Mode Enhance activé:</span>
+                <span className="font-semibold">{t('prompt.enhanceModeOn')}:</span>
                 <br />
-                • Génère des variations améliorées du prompt existant
+                • {t('prompt.enhanceFeature1')}
                 <br />
-                • Pas de limite de génération
+                • {t('prompt.enhanceFeature2')}
                 <br />
-                • Garde le prompt original dans le champ de saisie
+                • {t('prompt.enhanceFeature3')}
               </p>
             </div>
           ) : (
             <p className="text-sm text-gray-400">
-              Activer le mode Enhance pour améliorer vos prompts existants
+              {t('prompt.enhanceDescription')}
             </p>
           )}
         </div>
@@ -104,7 +106,7 @@ export default function PromptInput() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={enhanceMode ? "Enhance this prompt..." : "Enter your base prompt..."}
+          placeholder={t(enhanceMode ? 'prompt.enhanceInput' : 'prompt.input')}
           disabled={isGenerating}
           className="w-full px-12 py-4 bg-gray-900 border border-purple-500/30 rounded-xl 
                    text-white placeholder-gray-400 focus:outline-none focus:ring-2 
@@ -133,7 +135,7 @@ export default function PromptInput() {
               onChange={(e) => setNSFW(e.target.checked)}
               className="rounded border-gray-600 text-purple-500 focus:ring-purple-500"
             />
-            <span>Allow NSFW content</span>
+            <span>{t('prompt.allowNSFW')}</span>
           </label>
 
           <label className="flex items-center space-x-2 text-sm text-gray-400">
@@ -143,11 +145,11 @@ export default function PromptInput() {
               onChange={(e) => setSameLocation(e.target.checked)}
               className="rounded border-gray-600 text-purple-500 focus:ring-purple-500"
             />
-            <span>Same location for all prompts</span>
+            <span>{t('prompt.sameLocation')}</span>
           </label>
 
           <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-400">Variations:</label>
+            <label className="text-sm text-gray-400">{t('prompt.variations')}:</label>
             <select
               value={numVariations}
               onChange={(e) => setNumVariations(Number(e.target.value))}
@@ -163,7 +165,7 @@ export default function PromptInput() {
         {isNSFW && (
           <div className="flex items-center space-x-1 text-yellow-500">
             <AlertTriangle className="w-4 h-4" />
-            <span className="text-xs">NSFW content enabled</span>
+            <span className="text-xs">{t('prompt.nsfwEnabled')}</span>
           </div>
         )}
       </div>

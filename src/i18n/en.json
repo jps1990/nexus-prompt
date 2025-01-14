@@ -10,6 +10,7 @@
   },
   "prompt": {
     "input": "Enter your prompt...",
+    "enhanceInput": "Enhance this prompt...",
     "save": "Save",
     "edit": "Edit",
     "delete": "Delete",
@@ -18,7 +19,25 @@
     "search": "Search prompts...",
     "description": "Enter a base prompt and let NexusPrompt generate unique, professional variations using AI. Perfect for photographers, artists, and creators looking for fresh perspectives.",
     "empty": "Start by entering a prompt above",
-    "emptyDescription": "We'll generate creative variations for you"
+    "emptyDescription": "We'll generate creative variations for you",
+    "enhance": "Generate Variations",
+    "enhanced": "Prompt enhanced!",
+    "enhanceTitle": "Generate variations of this prompt",
+    "copied": "Copied to clipboard!",
+    "variationsGenerated": "Generated new variations!",
+    "variationsFailed": "Failed to generate variations",
+    "generateImages": "Generate images with HyperFlux AI",
+    "enhanceModeOff": "Enhance Mode OFF",
+    "enhanceModeOn": "Enhance Mode ON",
+    "enhanceDescription": "Enable Enhance mode to improve your existing prompts",
+    "enhanceFeature1": "Generates enhanced variations of the existing prompt",
+    "enhanceFeature2": "No generation limit",
+    "enhanceFeature3": "Keeps the original prompt in the input field",
+    "allowNSFW": "Allow NSFW content",
+    "sameLocation": "Same location for all prompts",
+    "variations": "Variations",
+    "nsfwEnabled": "NSFW content enabled",
+    "favorite": "Add/Remove from favorites"
   },
   "settings": {
     "title": "Settings",
@@ -33,6 +52,7 @@
     "importData": "Import Data",
     "apiKeySaved": "API key saved successfully",
     "invalidBackup": "Invalid backup file",
-    "dataExported": "Data exported successfully"
+    "dataExported": "Data exported successfully",
+    "dataImported": "Data imported successfully"
   }
 } 

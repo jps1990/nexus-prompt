@@ -1,8 +1,9 @@
 import { Heart, Copy, Trash, Wand2, Image } from 'lucide-react';
 import { Prompt } from '../types';
 import { usePromptStore } from '../store/promptStore';
-import { generatePromptVariations } from '../lib/openai';
+import { generatePromptVariations, parseVariation } from '../lib/openai';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface PromptCardProps {
   prompt: Prompt;
@@ -11,10 +12,11 @@ interface PromptCardProps {
 export default function PromptCard({ prompt }: PromptCardProps) {
   const { toggleFavorite, favorites, removePrompt, addPrompts, isGenerating, setGenerating } = usePromptStore();
   const isFavorite = favorites.includes(prompt.id);
+  const { t } = useTranslation();
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(prompt.content);
-    toast.success('Copied to clipboard!');
+    toast.success(t('prompt.copied'));
   };
 
   const generateVariations = async () => {
@@ -49,9 +51,9 @@ export default function PromptCard({ prompt }: PromptCardProps) {
       if (newPrompts.length > 0) {
         addPrompts(newPrompts);
       }
-      toast.success('Generated new variations!');
+      toast.success(t('prompt.variationsGenerated'));
     } catch (error) {
-      toast.error('Failed to generate variations');
+      toast.error(t('prompt.variationsFailed'));
       console.error(error);
     } finally {
       setGenerating(false);
@@ -75,12 +77,14 @@ export default function PromptCard({ prompt }: PromptCardProps) {
             onClick={() => toggleFavorite(prompt.id)}
             className={`p-2 rounded-lg transition-colors duration-200 
                      ${isFavorite ? 'text-pink-500' : 'text-gray-400 hover:text-pink-500'}`}
+            title={t('prompt.favorite')}
           >
             <Heart className="w-5 h-5" />
           </button>
           <button
             onClick={copyToClipboard}
             className="p-2 text-gray-400 hover:text-purple-400 rounded-lg transition-colors duration-200"
+            title={t('prompt.copy')}
           >
             <Copy className="w-5 h-5" />
           </button>
@@ -89,19 +93,21 @@ export default function PromptCard({ prompt }: PromptCardProps) {
             disabled={isGenerating}
             className="p-2 text-gray-400 hover:text-purple-400 rounded-lg transition-colors duration-200
                      disabled:opacity-50"
+            title={t('prompt.enhanceTitle')}
           >
             <Wand2 className={`w-5 h-5 ${isGenerating ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={openInHyperFlux}
             className="p-2 text-gray-400 hover:text-blue-400 rounded-lg transition-colors duration-200"
-            title="Generate images with HyperFlux AI"
+            title={t('prompt.generateImages')}
           >
             <Image className="w-5 h-5" />
           </button>
           <button
             onClick={() => removePrompt(prompt.id)}
             className="p-2 text-gray-400 hover:text-red-400 rounded-lg transition-colors duration-200"
+            title={t('prompt.delete')}
           >
             <Trash className="w-5 h-5" />
           </button>

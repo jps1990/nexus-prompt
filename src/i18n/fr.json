@@ -10,6 +10,7 @@
   },
   "prompt": {
     "input": "Entrez votre prompt...",
+    "enhanceInput": "Améliorez ce prompt...",
     "save": "Sauvegarder",
     "edit": "Modifier",
     "delete": "Supprimer",
@@ -18,7 +19,25 @@
     "search": "Rechercher des prompts...",
     "description": "Entrez un prompt de base et laissez NexusPrompt générer des variations uniques et professionnelles avec l'IA. Parfait pour les photographes, artistes et créateurs à la recherche de nouvelles perspectives.",
     "empty": "Commencez par entrer un prompt ci-dessus",
-    "emptyDescription": "Nous générerons des variations créatives pour vous"
+    "emptyDescription": "Nous générerons des variations créatives pour vous",
+    "enhance": "Générer des variations",
+    "enhanced": "Prompt amélioré !",
+    "enhanceTitle": "Générer des variations de ce prompt",
+    "copied": "Copié dans le presse-papiers !",
+    "variationsGenerated": "Nouvelles variations générées !",
+    "variationsFailed": "Échec de la génération des variations",
+    "generateImages": "Générer des images avec HyperFlux AI",
+    "enhanceModeOff": "Mode Enhance désactivé",
+    "enhanceModeOn": "Mode Enhance activé",
+    "enhanceDescription": "Activer le mode Enhance pour améliorer vos prompts existants",
+    "enhanceFeature1": "Génère des variations améliorées du prompt existant",
+    "enhanceFeature2": "Pas de limite de génération",
+    "enhanceFeature3": "Garde le prompt original dans le champ de saisie",
+    "allowNSFW": "Autoriser le contenu NSFW",
+    "sameLocation": "Même lieu pour tous les prompts",
+    "variations": "Variations",
+    "nsfwEnabled": "Contenu NSFW activé",
+    "favorite": "Ajouter/Retirer des favoris"
   },
   "settings": {
     "title": "Paramètres",
@@ -33,6 +52,7 @@
     "importData": "Importer les données",
     "apiKeySaved": "Clé API sauvegardée avec succès",
     "invalidBackup": "Fichier de sauvegarde invalide",
-    "dataExported": "Données exportées avec succès"
+    "dataExported": "Données exportées avec succès",
+    "dataImported": "Données importées avec succès"
   }
 } 
