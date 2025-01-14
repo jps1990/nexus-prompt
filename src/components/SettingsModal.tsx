@@ -13,7 +13,7 @@ interface SettingsModalProps {
 
 export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [apiKey, setApiKey] = useState('');
-  const { prompts, favorites, addPrompts, setNSFW, setSameLocation, setNumVariations } = usePromptStore();
+  const { prompts, favorites } = usePromptStore();
   const { language, setLanguage } = useLanguage();
   const { t } = useTranslation();
 
