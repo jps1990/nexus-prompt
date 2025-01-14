@@ -1,0 +1,38 @@
+{
+  "app": {
+    "title": "Générez votre prochain prompt créatif",
+    "settings": "Paramètres",
+    "theme": {
+      "light": "Clair",
+      "dark": "Sombre",
+      "system": "Système"
+    }
+  },
+  "prompt": {
+    "input": "Entrez votre prompt...",
+    "save": "Sauvegarder",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "copy": "Copier",
+    "share": "Partager",
+    "search": "Rechercher des prompts...",
+    "description": "Entrez un prompt de base et laissez NexusPrompt générer des variations uniques et professionnelles avec l'IA. Parfait pour les photographes, artistes et créateurs à la recherche de nouvelles perspectives.",
+    "empty": "Commencez par entrer un prompt ci-dessus",
+    "emptyDescription": "Nous générerons des variations créatives pour vous"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "language": "Langue",
+    "theme": "Thème",
+    "close": "Fermer",
+    "apiKeyRequired": "Pour commencer, veuillez ajouter votre clé API OpenAI dans les paramètres.",
+    "apiKeyDescription": "Cette application nécessite une clé API OpenAI pour fonctionner. Votre clé est chiffrée de manière sécurisée et stockée uniquement dans le stockage local de votre navigateur.",
+    "getApiKey": "Obtenir votre clé API OpenAI",
+    "apiKeyLabel": "Clé API OpenAI",
+    "exportData": "Exporter les données",
+    "importData": "Importer les données",
+    "apiKeySaved": "Clé API sauvegardée avec succès",
+    "invalidBackup": "Fichier de sauvegarde invalide",
+    "dataExported": "Données exportées avec succès"
+  }
+} 

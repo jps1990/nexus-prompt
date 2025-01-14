@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Download, Upload, Key, ExternalLink } from 'lucide-react';
+import { X, Download, Upload, Key, ExternalLink, Globe } from 'lucide-react';
 import { usePromptStore } from '../store/promptStore';
 import { encrypt, decrypt } from '../lib/crypto';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
 interface SettingsModalProps {
@@ -12,6 +14,8 @@ interface SettingsModalProps {
 export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [apiKey, setApiKey] = useState('');
   const { prompts, favorites } = usePromptStore();
+  const { language, setLanguage } = useLanguage();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const savedKey = localStorage.getItem('openai_api_key');
@@ -28,10 +32,10 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
     try {
       const encryptedKey = encrypt(apiKey);
       localStorage.setItem('openai_api_key', encryptedKey);
-      toast.success('API key saved successfully');
+      toast.success(t('settings.apiKeySaved'));
     } catch (error) {
       localStorage.setItem('openai_api_key', apiKey);
-      toast.success('API key saved successfully');
+      toast.success(t('settings.apiKeySaved'));
     }
   };
 
@@ -50,7 +54,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success('Data exported successfully');
+    toast.success(t('settings.dataExported'));
   };
 
   const importData = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,7 +69,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
         localStorage.setItem('favorites', JSON.stringify(data.favorites));
         window.location.reload();
       } catch (error) {
-        toast.error('Invalid backup file');
+        toast.error(t('settings.invalidBackup'));
       }
     };
     reader.readAsText(file);
@@ -77,17 +81,36 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
       <div className="bg-gray-900 rounded-xl p-6 max-w-md w-full mx-4 border border-purple-500/20">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-white">Settings</h2>
+          <h2 className="text-xl font-semibold text-white">{t('settings.title')}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-200 mb-2">
+              {t('settings.language')}
+            </label>
+            <div className="flex gap-2 items-center">
+              <Globe className="w-5 h-5 text-gray-400" />
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as 'fr' | 'en')}
+                className="flex-1 px-3 py-2 bg-gray-800 rounded-lg border border-gray-700 
+                         text-white focus:outline-none focus:ring-2 
+                         focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+          </div>
+
           <div className="space-y-4">
             <div className="bg-purple-500/10 rounded-lg p-4">
               <p className="text-sm text-gray-300">
-                This application requires an OpenAI API key to function. Your key is securely encrypted and stored only in your browser's local storage.
+                {t('settings.apiKeyDescription')}
               </p>
               <a
                 href="https://platform.openai.com/api-keys"
@@ -97,13 +120,13 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                          text-white rounded-lg hover:bg-purple-600 transition-colors duration-200"
               >
                 <ExternalLink className="w-4 h-4" />
-                Get your OpenAI API Key
+                {t('settings.getApiKey')}
               </a>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-200 mb-2">
-                OpenAI API Key
+                {t('settings.apiKeyLabel')}
               </label>
               <form onSubmit={(e) => { e.preventDefault(); saveApiKey(); }}>
                 <div className="flex gap-2">
@@ -136,13 +159,13 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                        transition-colors duration-200"
             >
               <Download className="w-5 h-5" />
-              Export Data
+              {t('settings.exportData')}
             </button>
             <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2 
                           bg-gray-800 text-white rounded-lg hover:bg-gray-700 
                           transition-colors duration-200 cursor-pointer">
               <Upload className="w-5 h-5" />
-              Import Data
+              {t('settings.importData')}
               <input
                 type="file"
                 accept=".json"

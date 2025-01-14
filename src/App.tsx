@@ -3,9 +3,11 @@ import Header from './components/Header';
 import PromptInput from './components/PromptInput';
 import PromptCard from './components/PromptCard';
 import { usePromptStore } from './store/promptStore';
+import { useTranslation } from 'react-i18next';
 
 function App() {
   const { prompts } = usePromptStore();
+  const { t } = useTranslation();
   const hasApiKey = localStorage.getItem('openai_api_key');
 
   return (
@@ -17,17 +19,15 @@ function App() {
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-center mb-4 bg-gradient-to-r 
                         from-purple-400 to-purple-600 bg-clip-text text-transparent">
-            Generate Your Next Creative Prompt
+            {t('app.title')}
           </h2>
           <p className="text-center text-gray-400 max-w-2xl mx-auto mb-8">
-            Enter a base prompt and let NexusPrompt generate unique, professional variations 
-            using AI. Perfect for photographers, artists, and creators looking for fresh 
-            perspectives and detailed creative direction.
+            {t('prompt.description')}
           </p>
           {!hasApiKey && (
             <div className="max-w-2xl mx-auto mb-8 p-4 bg-purple-500/10 rounded-lg text-center">
               <p className="text-gray-300 mb-2">
-                To get started, please add your OpenAI API key in the settings.
+                {t('settings.apiKeyRequired')}
               </p>
             </div>
           )}
@@ -42,8 +42,8 @@ function App() {
 
         {prompts.length === 0 && (
           <div className="text-center text-gray-400 mt-12">
-            <p className="text-lg">Start by entering a prompt above</p>
-            <p className="text-sm mt-2">We'll generate creative variations for you</p>
+            <p className="text-lg">{t('prompt.empty')}</p>
+            <p className="text-sm mt-2">{t('prompt.emptyDescription')}</p>
           </div>
         )}
       </main>

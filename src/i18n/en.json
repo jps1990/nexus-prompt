@@ -1,0 +1,38 @@
+{
+  "app": {
+    "title": "Generate Your Next Creative Prompt",
+    "settings": "Settings",
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
+  },
+  "prompt": {
+    "input": "Enter your prompt...",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "copy": "Copy",
+    "share": "Share",
+    "search": "Search prompts...",
+    "description": "Enter a base prompt and let NexusPrompt generate unique, professional variations using AI. Perfect for photographers, artists, and creators looking for fresh perspectives.",
+    "empty": "Start by entering a prompt above",
+    "emptyDescription": "We'll generate creative variations for you"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "close": "Close",
+    "apiKeyRequired": "To get started, please add your OpenAI API key in the settings.",
+    "apiKeyDescription": "This application requires an OpenAI API key to function. Your key is securely encrypted and stored only in your browser's local storage.",
+    "getApiKey": "Get your OpenAI API Key",
+    "apiKeyLabel": "OpenAI API Key",
+    "exportData": "Export Data",
+    "importData": "Import Data",
+    "apiKeySaved": "API key saved successfully",
+    "invalidBackup": "Invalid backup file",
+    "dataExported": "Data exported successfully"
+  }
+} 
