@@ -6,6 +6,11 @@
       "light": "Clair",
       "dark": "Sombre",
       "system": "Système"
+    },
+    "footer": {
+      "madeWith": "Fait avec",
+      "by": "par",
+      "portfolio": "Portfolio"
     }
   },
   "prompt": {

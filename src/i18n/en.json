@@ -6,6 +6,11 @@
       "light": "Light",
       "dark": "Dark",
       "system": "System"
+    },
+    "footer": {
+      "madeWith": "Made with",
+      "by": "by",
+      "portfolio": "Portfolio"
     }
   },
   "prompt": {

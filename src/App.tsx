@@ -1,5 +1,6 @@
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
+import Footer from './components/Footer';
 import PromptInput from './components/PromptInput';
 import PromptCard from './components/PromptCard';
 import { usePromptStore } from './store/promptStore';
@@ -47,6 +48,7 @@ function App() {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 }
