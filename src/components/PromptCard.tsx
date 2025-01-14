@@ -1,8 +1,7 @@
-import React from 'react';
 import { Heart, Copy, Trash, Wand2, Image } from 'lucide-react';
 import { Prompt } from '../types';
 import { usePromptStore } from '../store/promptStore';
-import { generatePromptVariations } from '../lib/openai';
+import { generatePromptVariations, parseVariation } from '../lib/openai';
 import toast from 'react-hot-toast';
 
 interface PromptCardProps {
@@ -23,20 +22,34 @@ export default function PromptCard({ prompt }: PromptCardProps) {
 
     try {
       setGenerating(true);
-      const variations = await generatePromptVariations(prompt.content);
-      
-      const newPrompts = variations.map((variation: any) => ({
-        id: crypto.randomUUID(),
-        content: variation.prompt,
-        description: variation.description,
-        category: variation.category,
-        tags: variation.tags,
-        createdAt: new Date(),
-        parentId: prompt.id,
-      }));
+      const stream = await generatePromptVariations(prompt.content);
+      let buffer = '';
+      const newPrompts = [];
 
-      addPrompts(newPrompts);
-      toast.success('Generated 10 new variations!');
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || '';
+        buffer += content;
+
+        const variation = parseVariation(buffer);
+        if (variation) {
+          const newPrompt = {
+            id: crypto.randomUUID(),
+            content: variation.prompt,
+            description: variation.description,
+            category: variation.category,
+            tags: variation.tags,
+            createdAt: new Date(),
+            parentId: prompt.id,
+          };
+          newPrompts.push(newPrompt);
+          buffer = buffer.replace(/<variation\d+>[\s\S]*?<\/variation\d+>/, '');
+        }
+      }
+
+      if (newPrompts.length > 0) {
+        addPrompts(newPrompts);
+      }
+      toast.success('Generated new variations!');
     } catch (error) {
       toast.error('Failed to generate variations');
       console.error(error);

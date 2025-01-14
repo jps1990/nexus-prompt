@@ -13,6 +13,8 @@ export default function PromptInput() {
     setNSFW,
     sameLocation,
     setSameLocation,
+    numVariations,
+    setNumVariations,
     addPrompts
   } = usePromptStore();
   const [enhanceMode, setEnhanceMode] = useState(false);
@@ -143,6 +145,19 @@ export default function PromptInput() {
             />
             <span>Same location for all prompts</span>
           </label>
+
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-400">Variations:</label>
+            <select
+              value={numVariations}
+              onChange={(e) => setNumVariations(Number(e.target.value))}
+              className="bg-gray-900 border border-gray-600 rounded text-sm text-gray-400 px-2 py-1"
+            >
+              {[1,2,3,4,5,6,7,8,9,10].map(num => (
+                <option key={num} value={num}>{num}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {isNSFW && (

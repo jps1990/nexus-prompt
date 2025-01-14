@@ -1,4 +1,3 @@
-import React from 'react';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import PromptInput from './components/PromptInput';
@@ -21,7 +20,7 @@ function App() {
             Generate Your Next Creative Prompt
           </h2>
           <p className="text-center text-gray-400 max-w-2xl mx-auto mb-8">
-            Enter a base prompt and let NexusPrompt generate 10 unique, professional variations 
+            Enter a base prompt and let NexusPrompt generate unique, professional variations 
             using AI. Perfect for photographers, artists, and creators looking for fresh 
             perspectives and detailed creative direction.
           </p>

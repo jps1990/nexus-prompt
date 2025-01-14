@@ -26,8 +26,8 @@ const createOpenAIClient = () => {
   });
 };
 
-const systemPrompt = (isNSFW: boolean, sameLocation: boolean) => `You are an expert creative director and art director specializing in generating highly detailed, professional prompts. 
-Your task is to create 10 unique, comprehensive variations of the given prompt, each wrapped in numbered variation tags.
+const systemPrompt = (isNSFW: boolean, sameLocation: boolean, numVariations: number) => `You are an expert creative director and art director specializing in generating highly detailed, professional prompts. 
+Your task is to create ${numVariations} unique, comprehensive variations of the given prompt, each wrapped in numbered variation tags.
 
 Format each variation as:
 <variation1>
@@ -84,13 +84,13 @@ Guidelines:
 Respond ONLY with the variations, no additional text.`;
 
 export const generatePromptVariations = async (basePrompt: string, isNSFW: boolean = false) => {
-  const { sameLocation } = usePromptStore.getState();
+  const { sameLocation, numVariations } = usePromptStore.getState();
   const openai = createOpenAIClient();
   
   return openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
     messages: [
-      { role: 'system', content: systemPrompt(isNSFW, sameLocation) },
+      { role: 'system', content: systemPrompt(isNSFW, sameLocation, numVariations) },
       { role: 'user', content: basePrompt }
     ],
     temperature: 1,
