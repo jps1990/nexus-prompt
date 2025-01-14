@@ -1,7 +1,7 @@
 import { Heart, Copy, Trash, Wand2, Image } from 'lucide-react';
 import { Prompt } from '../types';
 import { usePromptStore } from '../store/promptStore';
-import { generatePromptVariations, parseVariation } from '../lib/openai';
+import { generatePromptVariations } from '../lib/openai';
 import toast from 'react-hot-toast';
 
 interface PromptCardProps {

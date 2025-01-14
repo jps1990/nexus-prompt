@@ -13,7 +13,7 @@ interface SettingsModalProps {
 
 export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [apiKey, setApiKey] = useState('');
-  const { prompts, favorites } = usePromptStore();
+  const { prompts, favorites, addPrompts, setNSFW, setSameLocation, setNumVariations } = usePromptStore();
   const { language, setLanguage } = useLanguage();
   const { t } = useTranslation();
 
@@ -40,9 +40,13 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   };
 
   const exportData = () => {
+    const store = usePromptStore.getState();
     const data = {
       prompts,
       favorites,
+      isNSFW: store.isNSFW,
+      sameLocation: store.sameLocation,
+      numVariations: store.numVariations,
       exportDate: new Date().toISOString()
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -65,10 +69,44 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
     reader.onload = (e) => {
       try {
         const data = JSON.parse(e.target?.result as string);
-        localStorage.setItem('prompts', JSON.stringify(data.prompts));
-        localStorage.setItem('favorites', JSON.stringify(data.favorites));
+        
+        // Support des anciens formats d'export
+        const isLegacyFormat = !data.hasOwnProperty('isNSFW') && !data.hasOwnProperty('sameLocation');
+        
+        if (isLegacyFormat) {
+          // Si c'est un ancien format, on vérifie juste les prompts et favorites
+          if (!Array.isArray(data.prompts) && !Array.isArray(data.favorites)) {
+            throw new Error('Invalid backup format');
+          }
+        } else {
+          // Pour les nouveaux formats, on vérifie tout
+          if (!Array.isArray(data.prompts)) {
+            throw new Error('Invalid prompts data');
+          }
+        }
+
+        // Convertir les dates string en objets Date
+        const promptsWithDates = data.prompts.map((prompt: any) => ({
+          ...prompt,
+          createdAt: new Date(prompt.createdAt)
+        }));
+
+        // Garder les paramètres existants si on importe un ancien format
+        const currentState = usePromptStore.getState();
+        
+        usePromptStore.setState({
+          prompts: promptsWithDates,
+          favorites: data.favorites || [],
+          // Garder les paramètres actuels si on importe un ancien format
+          isNSFW: isLegacyFormat ? currentState.isNSFW : (data.isNSFW || false),
+          sameLocation: isLegacyFormat ? currentState.sameLocation : (data.sameLocation || false),
+          numVariations: isLegacyFormat ? currentState.numVariations : (data.numVariations || 3)
+        });
+
+        toast.success(t('settings.dataImported'));
         window.location.reload();
       } catch (error) {
+        console.error('Import error:', error);
         toast.error(t('settings.invalidBackup'));
       }
     };
