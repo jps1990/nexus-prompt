@@ -58,6 +58,17 @@
     "apiKeySaved": "Clé API sauvegardée avec succès",
     "invalidBackup": "Fichier de sauvegarde invalide",
     "dataExported": "Données exportées avec succès",
-    "dataImported": "Données importées avec succès"
+    "dataImported": "Données importées avec succès",
+    "provider": "Fournisseur IA",
+    "openRouterFree": "OpenRouter (modèles gratuits)",
+    "model": "Modèle gratuit",
+    "loadingModels": "Chargement des modèles...",
+    "noModels": "Aucun modèle gratuit trouvé",
+    "refreshModels": "Rafraîchir la liste des modèles",
+    "modelsFetchFailed": "Impossible de charger les modèles OpenRouter",
+    "openRouterKeyDescription": "OpenRouter donne accès à des modèles gratuits (liste chargée en direct). Une clé API OpenRouter gratuite est requise; elle est chiffrée et stockée uniquement dans votre navigateur.",
+    "getOpenRouterKey": "Obtenir votre clé API OpenRouter",
+    "openRouterKeyLabel": "Clé API OpenRouter",
+    "apiKeySaveFailed": "Impossible d'enregistrer la clé API"
   }
-} 
+}

@@ -1,29 +1,65 @@
 import OpenAI from 'openai';
-import { decrypt } from './crypto';
-import { usePromptStore } from '../store/promptStore';
+import { decrypt, isLegacyCiphertext } from './crypto';
+import { usePromptStore, Provider } from '../store/promptStore';
+import { OPENROUTER_BASE_URL, fetchFreeOpenRouterModels } from './openrouter';
 
-const getApiKey = () => {
-  const savedKey = localStorage.getItem('openai_api_key');
-  if (savedKey) {
-    try {
-      return decrypt(savedKey);
-    } catch (error) {
-      console.error('Error decrypting API key:', error);
-      return savedKey;
-    }
-  }
-  return import.meta.env.VITE_OPENAI_API_KEY;
+export const API_KEY_STORAGE: Record<Provider, string> = {
+  openai: 'openai_api_key',
+  openrouter: 'openrouter_api_key',
 };
 
-const createOpenAIClient = () => {
-  const apiKey = getApiKey();
+const getSavedKey = (provider: Provider) => {
+  const savedKey = localStorage.getItem(API_KEY_STORAGE[provider]);
+  // Une clé chiffrée par l'ancienne version ne peut plus être lue : on la considère absente
+  return savedKey && !isLegacyCiphertext(savedKey) ? savedKey : null;
+};
+
+export const hasApiKey = (provider: Provider) => !!getSavedKey(provider) ||
+  (provider === 'openai' && !!import.meta.env.VITE_OPENAI_API_KEY);
+
+export const readApiKey = async (provider: Provider) => {
+  const savedKey = getSavedKey(provider);
+  if (savedKey) {
+    try {
+      return await decrypt(savedKey);
+    } catch (error) {
+      console.error('Error decrypting API key:', error);
+    }
+  }
+  return provider === 'openai' ? import.meta.env.VITE_OPENAI_API_KEY : undefined;
+};
+
+const createClient = async (provider: Provider) => {
+  const apiKey = await readApiKey(provider);
   if (!apiKey) {
-    throw new Error('OpenAI API key not found. Please add your API key in settings.');
+    const name = provider === 'openrouter' ? 'OpenRouter' : 'OpenAI';
+    throw new Error(`${name} API key not found. Please add your API key in settings.`);
+  }
+  if (provider === 'openrouter') {
+    return new OpenAI({
+      apiKey,
+      baseURL: OPENROUTER_BASE_URL,
+      dangerouslyAllowBrowser: true,
+      defaultHeaders: {
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'NexusPrompt'
+      }
+    });
   }
   return new OpenAI({
     apiKey,
     dangerouslyAllowBrowser: true
   });
+};
+
+// Modèle OpenRouter choisi, sinon le premier modèle gratuit disponible
+const resolveOpenRouterModel = async () => {
+  const { openRouterModel, setOpenRouterModel } = usePromptStore.getState();
+  const models = await fetchFreeOpenRouterModels();
+  if (openRouterModel && models.some((m) => m.id === openRouterModel)) return openRouterModel;
+  if (models.length === 0) throw new Error('No free OpenRouter model available.');
+  setOpenRouterModel(models[0].id);
+  return models[0].id;
 };
 
 const systemPrompt = (isNSFW: boolean, sameLocation: boolean, numVariations: number) => `You are an expert creative director and art director specializing in generating highly detailed, professional prompts. 
@@ -84,11 +120,12 @@ Guidelines:
 Respond ONLY with the variations, no additional text.`;
 
 export const generatePromptVariations = async (basePrompt: string, isNSFW: boolean = false) => {
-  const { sameLocation, numVariations } = usePromptStore.getState();
-  const openai = createOpenAIClient();
-  
+  const { sameLocation, numVariations, provider } = usePromptStore.getState();
+  const openai = await createClient(provider);
+  const model = provider === 'openrouter' ? await resolveOpenRouterModel() : 'gpt-3.5-turbo';
+
   return openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
+    model,
     messages: [
       { role: 'system', content: systemPrompt(isNSFW, sameLocation, numVariations) },
       { role: 'user', content: basePrompt }

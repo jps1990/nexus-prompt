@@ -29,7 +29,7 @@ export default function PromptInput() {
       setGenerating(true);
       const stream = await generatePromptVariations(input.trim(), isNSFW);
       let buffer = '';
-      let newPrompts = [];
+      const newPrompts = [];
 
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content || '';

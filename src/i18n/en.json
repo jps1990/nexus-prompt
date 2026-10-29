@@ -58,6 +58,17 @@
     "apiKeySaved": "API key saved successfully",
     "invalidBackup": "Invalid backup file",
     "dataExported": "Data exported successfully",
-    "dataImported": "Data imported successfully"
+    "dataImported": "Data imported successfully",
+    "provider": "AI provider",
+    "openRouterFree": "OpenRouter (free models)",
+    "model": "Free model",
+    "loadingModels": "Loading models...",
+    "noModels": "No free model found",
+    "refreshModels": "Refresh model list",
+    "modelsFetchFailed": "Could not load OpenRouter models",
+    "openRouterKeyDescription": "OpenRouter gives access to free models (list fetched live). A free OpenRouter API key is required; it is encrypted and stored only in your browser.",
+    "getOpenRouterKey": "Get your OpenRouter API key",
+    "openRouterKeyLabel": "OpenRouter API Key",
+    "apiKeySaveFailed": "Could not save the API key"
   }
-} 
+}

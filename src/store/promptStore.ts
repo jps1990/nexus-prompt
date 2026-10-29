@@ -10,6 +10,8 @@ interface Prompt {
   createdAt: Date;
 }
 
+export type Provider = 'openai' | 'openrouter';
+
 interface PromptStore {
   prompts: Prompt[];
   favorites: string[];
@@ -17,11 +19,15 @@ interface PromptStore {
   isNSFW: boolean;
   sameLocation: boolean;
   numVariations: number;
+  provider: Provider;
+  openRouterModel: string;
   addPrompts: (prompts: Prompt[]) => void;
   setGenerating: (status: boolean) => void;
   setNSFW: (status: boolean) => void;
   setSameLocation: (status: boolean) => void;
   setNumVariations: (num: number) => void;
+  setProvider: (provider: Provider) => void;
+  setOpenRouterModel: (model: string) => void;
   toggleFavorite: (id: string) => void;
   removePrompt: (id: string) => void;
 }
@@ -35,6 +41,8 @@ export const usePromptStore = create<PromptStore>()(
       isNSFW: false,
       sameLocation: false,
       numVariations: 3,
+      provider: 'openai',
+      openRouterModel: '',
       addPrompts: (prompts) => set((state) => ({ 
         prompts: [...state.prompts, ...prompts] 
       })),
@@ -42,6 +50,8 @@ export const usePromptStore = create<PromptStore>()(
       setNSFW: (status) => set({ isNSFW: status }),
       setSameLocation: (status) => set({ sameLocation: status }),
       setNumVariations: (num) => set({ numVariations: num }),
+      setProvider: (provider) => set({ provider }),
+      setOpenRouterModel: (model) => set({ openRouterModel: model }),
       toggleFavorite: (id) => set((state) => ({
         favorites: state.favorites.includes(id)
           ? state.favorites.filter(fid => fid !== id)
@@ -59,6 +69,8 @@ export const usePromptStore = create<PromptStore>()(
         isNSFW: state.isNSFW,
         sameLocation: state.sameLocation,
         numVariations: state.numVariations,
+        provider: state.provider,
+        openRouterModel: state.openRouterModel,
       }),
     }
   )

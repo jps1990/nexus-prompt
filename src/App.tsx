@@ -5,11 +5,12 @@ import PromptInput from './components/PromptInput';
 import PromptCard from './components/PromptCard';
 import { usePromptStore } from './store/promptStore';
 import { useTranslation } from 'react-i18next';
+import { hasApiKey as checkApiKey } from './lib/openai';
 
 function App() {
-  const { prompts } = usePromptStore();
+  const { prompts, provider } = usePromptStore();
   const { t } = useTranslation();
-  const hasApiKey = localStorage.getItem('openai_api_key');
+  const hasApiKey = checkApiKey(provider);
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
