@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Download, Upload, Key, ExternalLink, Globe } from 'lucide-react';
-import { usePromptStore } from '../store/promptStore';
-import { encrypt, decrypt } from '../lib/crypto';
+import { X, Download, Upload, Key, ExternalLink, Globe, Server, Cpu, RefreshCw } from 'lucide-react';
+import { usePromptStore, Provider } from '../store/promptStore';
+import { API_KEY_STORAGE, readApiKey } from '../lib/openai';
+import { fetchFreeOpenRouterModels, OpenRouterModel } from '../lib/openrouter';
+import { encrypt } from '../lib/crypto';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -13,29 +15,66 @@ interface SettingsModalProps {
 
 export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [apiKey, setApiKey] = useState('');
-  const { prompts, favorites } = usePromptStore();
+  const [freeModels, setFreeModels] = useState<OpenRouterModel[]>([]);
+  const [refreshingModels, setRefreshingModels] = useState(false);
+  const [modelsError, setModelsError] = useState(false);
+  const { prompts, favorites, provider, setProvider, openRouterModel, setOpenRouterModel } = usePromptStore();
   const { language, setLanguage } = useLanguage();
   const { t } = useTranslation();
 
   useEffect(() => {
-    const savedKey = localStorage.getItem('openai_api_key');
-    if (savedKey) {
-      try {
-        setApiKey(decrypt(savedKey));
-      } catch (error) {
-        console.error('Error decrypting API key');
-      }
-    }
-  }, []);
+    let cancelled = false;
+    readApiKey(provider).then((key) => {
+      if (!cancelled) setApiKey(key && localStorage.getItem(API_KEY_STORAGE[provider]) ? key : '');
+    });
+    return () => { cancelled = true; };
+  }, [provider]);
 
-  const saveApiKey = () => {
+  const applyModels = (models: OpenRouterModel[]) => {
+    setFreeModels(models);
+    setModelsError(false);
+    const { openRouterModel: current } = usePromptStore.getState();
+    if (models.length > 0 && !models.some((m) => m.id === current)) {
+      setOpenRouterModel(models[0].id);
+    }
+  };
+
+  const onModelsError = (error: unknown) => {
+    console.error('Error fetching OpenRouter models:', error);
+    setModelsError(true);
+    toast.error(t('settings.modelsFetchFailed'));
+  };
+
+  useEffect(() => {
+    if (!open || provider !== 'openrouter') return;
+    let cancelled = false;
+    fetchFreeOpenRouterModels()
+      .then((models) => { if (!cancelled) applyModels(models); })
+      .catch((error) => { if (!cancelled) onModelsError(error); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, provider]);
+
+  const refreshModels = async () => {
+    setRefreshingModels(true);
     try {
-      const encryptedKey = encrypt(apiKey);
-      localStorage.setItem('openai_api_key', encryptedKey);
+      applyModels(await fetchFreeOpenRouterModels(true));
+    } catch (error) {
+      onModelsError(error);
+    } finally {
+      setRefreshingModels(false);
+    }
+  };
+
+  const loadingModels = refreshingModels || (freeModels.length === 0 && !modelsError);
+
+  const saveApiKey = async () => {
+    try {
+      localStorage.setItem(API_KEY_STORAGE[provider], await encrypt(apiKey));
       toast.success(t('settings.apiKeySaved'));
     } catch (error) {
-      localStorage.setItem('openai_api_key', apiKey);
-      toast.success(t('settings.apiKeySaved'));
+      console.error('Error encrypting API key:', error);
+      toast.error(t('settings.apiKeySaveFailed'));
     }
   };
 
@@ -71,7 +110,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
         const data = JSON.parse(e.target?.result as string);
         
         // Support des anciens formats d'export
-        const isLegacyFormat = !data.hasOwnProperty('isNSFW') && !data.hasOwnProperty('sameLocation');
+        const isLegacyFormat = !Object.prototype.hasOwnProperty.call(data, 'isNSFW') && !Object.prototype.hasOwnProperty.call(data, 'sameLocation');
         
         if (isLegacyFormat) {
           // Si c'est un ancien format, on vérifie juste les prompts et favorites
@@ -86,7 +125,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
         }
 
         // Convertir les dates string en objets Date
-        const promptsWithDates = data.prompts.map((prompt: any) => ({
+        const promptsWithDates = (data.prompts || []).map((prompt: { createdAt: string }) => ({
           ...prompt,
           createdAt: new Date(prompt.createdAt)
         }));
@@ -145,26 +184,83 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-200 mb-2">
+              {t('settings.provider')}
+            </label>
+            <div className="flex gap-2 items-center">
+              <Server className="w-5 h-5 text-gray-400" />
+              <select
+                value={provider}
+                onChange={(e) => setProvider(e.target.value as Provider)}
+                className="flex-1 px-3 py-2 bg-gray-800 rounded-lg border border-gray-700 
+                         text-white focus:outline-none focus:ring-2 
+                         focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="openai">OpenAI</option>
+                <option value="openrouter">{t('settings.openRouterFree')}</option>
+              </select>
+            </div>
+          </div>
+
+          {provider === 'openrouter' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-200 mb-2">
+                {t('settings.model')} ({freeModels.length})
+              </label>
+              <div className="flex gap-2 items-center">
+                <Cpu className="w-5 h-5 text-gray-400" />
+                <select
+                  value={openRouterModel}
+                  onChange={(e) => setOpenRouterModel(e.target.value)}
+                  disabled={loadingModels || freeModels.length === 0}
+                  className="flex-1 min-w-0 px-3 py-2 bg-gray-800 rounded-lg border border-gray-700 
+                           text-white focus:outline-none focus:ring-2 
+                           focus:ring-purple-500 focus:border-transparent disabled:opacity-50"
+                >
+                  {freeModels.length === 0 && (
+                    <option value="">{loadingModels ? t('settings.loadingModels') : t('settings.noModels')}</option>
+                  )}
+                  {freeModels.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.name} · {Math.round(model.context_length / 1000)}k
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={refreshModels}
+                  disabled={loadingModels}
+                  title={t('settings.refreshModels')}
+                  className="p-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 
+                           transition-colors duration-200 disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-5 h-5 ${loadingModels ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-4">
             <div className="bg-purple-500/10 rounded-lg p-4">
               <p className="text-sm text-gray-300">
-                {t('settings.apiKeyDescription')}
+                {provider === 'openrouter' ? t('settings.openRouterKeyDescription') : t('settings.apiKeyDescription')}
               </p>
               <a
-                href="https://platform.openai.com/api-keys"
+                href={provider === 'openrouter' ? 'https://openrouter.ai/settings/keys' : 'https://platform.openai.com/api-keys'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-purple-500 
                          text-white rounded-lg hover:bg-purple-600 transition-colors duration-200"
               >
                 <ExternalLink className="w-4 h-4" />
-                {t('settings.getApiKey')}
+                {provider === 'openrouter' ? t('settings.getOpenRouterKey') : t('settings.getApiKey')}
               </a>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-200 mb-2">
-                {t('settings.apiKeyLabel')}
+                {provider === 'openrouter' ? t('settings.openRouterKeyLabel') : t('settings.apiKeyLabel')}
               </label>
               <form onSubmit={(e) => { e.preventDefault(); saveApiKey(); }}>
                 <div className="flex gap-2">
@@ -172,7 +268,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                     type="password"
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="sk-..."
+                    placeholder={provider === 'openrouter' ? 'sk-or-...' : 'sk-...'}
                     className="flex-1 px-3 py-2 bg-gray-800 rounded-lg border border-gray-700 
                              text-white placeholder-gray-400 focus:outline-none focus:ring-2 
                              focus:ring-purple-500 focus:border-transparent"

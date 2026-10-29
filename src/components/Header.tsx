@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Brain, Settings, Coffee } from 'lucide-react';
 import SettingsModal from './SettingsModal';
 

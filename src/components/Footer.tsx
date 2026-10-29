@@ -1,4 +1,3 @@
-import React from 'react';
 import { Heart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
