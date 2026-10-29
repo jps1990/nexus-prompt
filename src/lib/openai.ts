@@ -52,14 +52,24 @@ const createClient = async (provider: Provider) => {
   });
 };
 
-// Modèle OpenRouter choisi, sinon le premier modèle gratuit disponible
-const resolveOpenRouterModel = async () => {
+// Modèles gratuits à essayer dans l'ordre : le modèle choisi d'abord, puis les autres (grand contexte en premier)
+const openRouterCandidates = async () => {
   const { openRouterModel, setOpenRouterModel } = usePromptStore.getState();
   const models = await fetchFreeOpenRouterModels();
-  if (openRouterModel && models.some((m) => m.id === openRouterModel)) return openRouterModel;
   if (models.length === 0) throw new Error('No free OpenRouter model available.');
-  setOpenRouterModel(models[0].id);
-  return models[0].id;
+  const chosen = models.find((m) => m.id === openRouterModel);
+  const others = models
+    .filter((m) => m !== chosen)
+    .sort((a, b) => b.context_length - a.context_length);
+  const ordered = chosen ? [chosen, ...others] : others;
+  if (!chosen) setOpenRouterModel(ordered[0].id);
+  return ordered.slice(0, 4).map((m) => m.id);
+};
+
+// Erreurs propres à un modèle gratuit (indisponible, saturé, format refusé) : on passe au suivant
+const isModelError = (error: unknown) => {
+  const status = (error as { status?: number })?.status;
+  return status === 400 || status === 404 || status === 408 || status === 429 || (status !== undefined && status >= 500);
 };
 
 const systemPrompt = (isNSFW: boolean, sameLocation: boolean, numVariations: number) => `You are an expert creative director and art director specializing in generating highly detailed, professional prompts. 
@@ -122,33 +132,31 @@ Respond ONLY with the variations, no additional text.`;
 export const generatePromptVariations = async (basePrompt: string, isNSFW: boolean = false) => {
   const { sameLocation, numVariations, provider } = usePromptStore.getState();
   const openai = await createClient(provider);
-  const model = provider === 'openrouter' ? await resolveOpenRouterModel() : 'gpt-3.5-turbo';
+  const system = systemPrompt(isNSFW, sameLocation, numVariations);
 
-  return openai.chat.completions.create({
-    model,
-    messages: [
-      { role: 'system', content: systemPrompt(isNSFW, sameLocation, numVariations) },
-      { role: 'user', content: basePrompt }
-    ],
-    temperature: 1,
-    stream: true
-  });
-};
+  if (provider === 'openai') {
+    return openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: basePrompt }
+      ],
+      temperature: 1,
+      stream: true
+    });
+  }
 
-export const parseVariation = (text: string): { 
-  prompt: string; 
-  description: string; 
-  category: string;
-  tags: string[];
-} | null => {
-  const variationMatch = text.match(/<variation\d+>([\s\S]*?)<\/variation\d+>/);
-  if (!variationMatch) return null;
-
-  const content = variationMatch[1];
-  return {
-    prompt: content.match(/prompt: (.*)/)?.[1]?.trim() || '',
-    description: content.match(/description: (.*)/)?.[1]?.trim() || '',
-    category: content.match(/category: (.*)/)?.[1]?.trim() || '',
-    tags: JSON.parse(content.match(/tags: (\[.*?\])/)?.[1] || '[]'),
-  };
+  // Beaucoup de modèles gratuits refusent le rôle "system" : tout passe dans un seul message utilisateur
+  const messages = [{ role: 'user' as const, content: `${system}\n\nPrompt to expand:\n${basePrompt}` }];
+  let lastError: unknown;
+  for (const model of await openRouterCandidates()) {
+    try {
+      return await openai.chat.completions.create({ model, messages, temperature: 1, stream: true });
+    } catch (error) {
+      lastError = error;
+      console.warn(`OpenRouter model ${model} failed, trying the next one:`, error);
+      if (!isModelError(error)) break;
+    }
+  }
+  throw lastError;
 };

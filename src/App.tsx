@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -11,6 +12,11 @@ function App() {
   const { prompts, provider } = usePromptStore();
   const { t } = useTranslation();
   const hasApiKey = checkApiKey(provider);
+  // Le store est chiffré, donc chargé de façon asynchrone : évite d'afficher « vide » une fraction de seconde
+  const hydrated = useSyncExternalStore(
+    (callback) => usePromptStore.persist.onFinishHydration(callback),
+    () => usePromptStore.persist.hasHydrated()
+  );
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -42,7 +48,7 @@ function App() {
           ))}
         </div>
 
-        {prompts.length === 0 && (
+        {hydrated && prompts.length === 0 && (
           <div className="text-center text-gray-400 mt-12">
             <p className="text-lg">{t('prompt.empty')}</p>
             <p className="text-sm mt-2">{t('prompt.emptyDescription')}</p>

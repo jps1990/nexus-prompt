@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { secureStorage } from '../lib/secureStorage';
 
 interface Prompt {
   id: string;
@@ -63,6 +64,7 @@ export const usePromptStore = create<PromptStore>()(
     }),
     {
       name: 'prompt-storage',
+      storage: createJSONStorage(() => secureStorage),
       partialize: (state) => ({
         prompts: state.prompts,
         favorites: state.favorites,

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Sparkles, Send, Loader2, AlertTriangle } from 'lucide-react';
 import { usePromptStore } from '../store/promptStore';
-import { generatePromptVariations, parseVariation } from '../lib/openai';
+import { generatePromptVariations } from '../lib/openai';
+import { parseVariations } from '../lib/parseVariations';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
@@ -29,37 +30,32 @@ export default function PromptInput() {
       setGenerating(true);
       const stream = await generatePromptVariations(input.trim(), isNSFW);
       let buffer = '';
-      const newPrompts = [];
-
       for await (const chunk of stream) {
-        const content = chunk.choices[0]?.delta?.content || '';
-        buffer += content;
-
-        const variation = parseVariation(buffer);
-        if (variation) {
-          const newPrompt = {
-            id: crypto.randomUUID(),
-            content: variation.prompt,
-            description: variation.description,
-            category: variation.category,
-            tags: variation.tags,
-            createdAt: new Date(),
-          };
-          newPrompts.push(newPrompt);
-          buffer = buffer.replace(/<variation\d+>[\s\S]*?<\/variation\d+>/, '');
-        }
+        buffer += chunk.choices[0]?.delta?.content || '';
       }
 
-      if (newPrompts.length > 0) {
-        addPrompts(newPrompts);
+      const newPrompts = parseVariations(buffer).map((variation) => ({
+        id: crypto.randomUUID(),
+        content: variation.prompt,
+        description: variation.description,
+        category: variation.category,
+        tags: variation.tags,
+        createdAt: new Date(),
+      }));
+
+      if (newPrompts.length === 0) {
+        console.error('No variation could be parsed from the model output:', buffer);
+        throw new Error('Empty or unparseable model output');
       }
+      addPrompts(newPrompts);
 
       if (!enhanceMode) {
         setInput('');
       }
       toast.success(t(enhanceMode ? 'prompt.enhanced' : 'prompt.variationsGenerated'));
     } catch (error) {
-      toast.error(t('prompt.variationsFailed'));
+      const detail = error instanceof Error ? error.message : '';
+      toast.error(detail ? `${t('prompt.variationsFailed')} (${detail.slice(0, 160)})` : t('prompt.variationsFailed'));
       console.error(error);
     } finally {
       setGenerating(false);

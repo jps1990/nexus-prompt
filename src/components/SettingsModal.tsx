@@ -4,6 +4,7 @@ import { usePromptStore, Provider } from '../store/promptStore';
 import { API_KEY_STORAGE, readApiKey } from '../lib/openai';
 import { fetchFreeOpenRouterModels, OpenRouterModel } from '../lib/openrouter';
 import { encrypt } from '../lib/crypto';
+import { flushSecureStorage } from '../lib/secureStorage';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -105,7 +106,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const data = JSON.parse(e.target?.result as string);
         
@@ -143,6 +144,8 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
         });
 
         toast.success(t('settings.dataImported'));
+        // Le store s'enregistre de façon chiffrée (asynchrone) : on attend avant de recharger
+        await flushSecureStorage();
         window.location.reload();
       } catch (error) {
         console.error('Import error:', error);
